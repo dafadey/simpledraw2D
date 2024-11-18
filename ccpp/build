@@ -1,0 +1,6 @@
+#!/bin/bash
+gcc -O3 -g test.c -I../ -L../ -lsimpledraw -lGL -lglfw -Wl,-rpath=`pwd`/.. -o c.out
+
+g++ -O3 -g test0.cpp -I../ -L../ -lsimpledraw -lGL -lglfw -Wl,-rpath=`pwd`/.. -o c0++.out
+
+g++ -O3 -g test.cpp -I../ -L../ -lsimpledraw -lGL -lglfw -Wl,-rpath=`pwd`/.. -o c++.out

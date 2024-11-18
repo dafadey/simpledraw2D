@@ -1,0 +1,7 @@
+#!/bin/bash
+gfortran -g hw_live.f90 -c -o hw.o
+gfortran -g hw.o -L../ -lsimpledraw -lGL -lglfw -Wl,-rpath=`pwd`/.. -o f.out
+
+#gcc -O3 -g test.c -L./ -lsimpledraw -lGL -lglfw -Wl,-rpath=`pwd` -o c.out
+
+#g++ -O3 -g test.cpp -L./ -lsimpledraw -lGL -lglfw -Wl,-rpath=`pwd` -o c++.out

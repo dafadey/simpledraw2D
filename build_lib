@@ -1,0 +1,7 @@
+#!/bin/bash
+objcopy -I binary -O elf64-x86-64 --binary-architecture i386 font.dat font.o
+g++ -g -fPIC -O3 -I/home/dan/Downloads/glfw-3.4/install/include -c simpledraw2d_glfw3.cpp
+g++ -O3 -g -fPIC -I/usr/include/python3.12 -I/usr/lib/python3/dist-packages/numpy/core/include -c simpledraw2d_py.cpp
+g++ *.o /home/dan/Downloads/glfw-3.4/install/lib/libglfw3.a /usr/lib/x86_64-linux-gnu/libGLEW.a -shared -o simpledraw2D.so
+g++ -g -shared -Wl,-soname,libsimpledraw.so -o libsimpledraw.so simpledraw2d_glfw3.o font.o -static-libstdc++
+rm -f *.o
