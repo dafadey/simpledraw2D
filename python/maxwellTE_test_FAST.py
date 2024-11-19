@@ -2,7 +2,7 @@
 
 import matplotlib
 import matplotlib.pyplot as plt
-from fdtd_plasma import *
+from fdtd_plasma_CPython import *
 
 from OpenGL.GL import *
 import simpledraw2D as sd2D
@@ -28,7 +28,7 @@ for i in range(0,ns):
       z_loc = z - fdtd.V * fdtd.t - fdtd.nz * fdtd.dz * 0.7
       sig1[zi] = (math.cos(z_loc*math.pi/Z) * 0.5 + 0.5) * math.sin(z_loc * math.pi/Z) if abs(z_loc) < Z else 0
       fdtd.bz[zi, source_xi] += (math.cos(z_loc*math.pi/Z) * 0.5 + 0.5) * math.sin(z_loc * math.pi/Z) * fdtd.dt * 0.5 if abs(z_loc) < Z else 0
-    fdtd.step(dt = fdtd.dt * 0.5)
+    fdtd.stepC(dt = fdtd.dt * 0.5)
     for zi in range(0,fdtd.nz) :
       sig2[zi] = (fdtd.ey[zi,source_xi] - fdtd.ey[zi,source_xi-1]) / fdtd.dx
 

@@ -1,4 +1,4 @@
-#!/usr/bin/python3.9
+#!/usr/bin/python3.10
 
 import numpy as np
 import math
@@ -13,8 +13,6 @@ def shift(arr, shft) :
     arr[i] = arr[i+shft].copy()
   for i in range(len(arr) - shft, len(arr)) :
     arr[i] = np.zeros(len(arr[0]), dtype=np.float32)
-
-
 
 class fdtd_plasma :
   def __init__(self, nz, nx, dz, dx, nplasma, nu, V, xPML=None, shft0=None):
@@ -195,9 +193,7 @@ class fdtdTE_plasma :
 
     self.PMLi0 = math.ceil(self.xPML/self.dx)
     self.PMLi1 = self.nx #math.floor((self.nx*self.dx - self.xPML)/self.dx)
-    
-    #self.fdtdlib=ctypes.cdll.LoadLibrary("./libfdtd.so")
-    
+ 
     for i in range(0, self.PMLi0) :
       self.regular[i] = 0
       self.PML[i] = 1
@@ -289,30 +285,5 @@ class fdtdTE_plasma :
       self.ey[:, i] = self.eyx[:, i] + self.eyz[:, i] 
         
     self.jy += (np.multiply(self.plasma, self.ey) - self.nu * self.jy) * dt
-    
-    self.t += dt
-
-  def stepC(self, dt) :
-    '''
-    d bx/dt = d ey/dz
-    d bz/dt = -d ey/dx
-    d ey/dt = d bx/dz - d bz/dx + jy
-    '''
-    if self.t * self.V - (self.shft - self.shft0) * self.dz > self.BS * self.dz :
-      shift(self.jy, self.BS)
-      shift(self.bz, self.BS)
-      shift(self.bx, self.BS)
-      shift(self.ey, self.BS)
-      shift(self.eyx, self.BS)
-      shift(self.eyz, self.BS)
-      self.shft += self.BS
-    
-    f = self.fdtdlib.stepTE
-    
-    #void stepTE(int nz, int nx, FL_DBL* bx, FL_DBL* bz, FL_DBL* eyx, FL_DBL* eyz, FL_DBL* ey, FL_DBL* jy, FL_DBL* PMLexp, FL_DBL* plasma, int PMLi0, int PMLi1, FL_DBL nu, FL_DBL dz, FL_DBL dx, FL_DBL dt) 
-    
-    f.argtypes = [ctypes.c_int, ctypes.c_int, ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double), ctypes.c_int, ctypes.c_int, ctypes.c_double, ctypes.c_double, ctypes.c_double, ctypes.c_double]
-    
-    f(ctypes.c_int(self.nz), ctypes.c_int(self.nx), self.bx.ctypes.data_as(ctypes.POINTER(ctypes.c_double)), self.bz.ctypes.data_as(ctypes.POINTER(ctypes.c_double)), self.eyx.ctypes.data_as(ctypes.POINTER(ctypes.c_double)), self.eyz.ctypes.data_as(ctypes.POINTER(ctypes.c_double)), self.ey.ctypes.data_as(ctypes.POINTER(ctypes.c_double)), self.jy.ctypes.data_as(ctypes.POINTER(ctypes.c_double)), self.PMLexp.ctypes.data_as(ctypes.POINTER(ctypes.c_double)), self.plasma.ctypes.data_as(ctypes.POINTER(ctypes.c_double)), ctypes.c_int(self.PMLi0), ctypes.c_int(self.PMLi1), ctypes.c_double(self.nu), ctypes.c_double(self.dz), ctypes.c_double(self.dx), ctypes.c_double(dt))
     
     self.t += dt

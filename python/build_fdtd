@@ -1,0 +1,3 @@
+#!/bin/bash
+#g++ -O3 -march=native -fPIC fdtd_plasma.cpp -fopenmp -shared -o libfdtd.so
+g++ -O3 -march=native -fPIC fdtd_plasma.cpp -shared -o libfdtd.so
