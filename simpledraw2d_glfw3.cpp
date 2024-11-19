@@ -1,7 +1,18 @@
 //glfw version
 #ifdef _WIN32
-#  define WINDOWS_LEAN_AND_MEAN
-#  include <windows.h>
+#define WINDOWS_LEAN_AND_MEAN
+#define NOMINMAX
+#include <windows.h>
+#include "simpledraw2D_res.h"
+#endif
+
+#define FADEY_OLDSCHOOL
+
+#ifdef _WIN32
+#ifndef __MINGW32__
+#define _NATIVE_WIN32
+#undef FADEY_OLDSCHOOL
+#endif
 #endif
 
 #include <cmath>
@@ -10,11 +21,27 @@
 #include <float.h>
 #include <string>
 #include <array>
+
+#ifndef _NATIVE_WIN32
 #include <unistd.h>
+#endif
+
 #include <stdarg.h>
 #include <limits>
 
+
+#ifdef FADEY_OLDSCHOOL
 #include <pthread.h>
+#else
+#include <thread>
+#include <mutex>
+#include <condition_variable>
+#endif
+
+#ifdef _NATIVE_WIN32
+#include <GL/glew.h>
+#endif
+
 #if defined(__APPLE__) || defined(MACOSX)
 #include <GL/glfw.h>
 #else
@@ -123,7 +150,7 @@ static fixed_str<16> fireCount_str;
 
 //2d colormaps:
 static GLuint* texture;
-static int*		 texMAGinfo;
+static int*    texMAGinfo;
 static int*    texUPD;
 static int*    texSZ;
 static float*  texMAG;
@@ -152,10 +179,18 @@ static float***    plots; // plots data pointers
 static color** plotsColor; // plot color
 
 static int* close_win;
-static pthread_mutex_t				close_win_mutex;
-static pthread_mutex_t				data_update_mutex;
-static pthread_cond_t         interact_cond;
-static pthread_mutex_t        interact_mutex;
+#ifdef FADEY_OLDSCHOOL
+static pthread_mutex_t            close_win_mutex;
+static pthread_mutex_t            data_update_mutex;
+static pthread_cond_t             interact_cond;
+static pthread_mutex_t            interact_mutex;
+#else
+static std::condition_variable   close_win_cond;
+static std::mutex                close_win_mutex;
+static std::mutex                data_update_mutex;
+static std::condition_variable   interact_cond;
+static std::mutex                interact_mutex;
+#endif
 
 static int XSize = 512;
 static int YSize = 512;
@@ -168,14 +203,14 @@ static int side_max;
 static double xmouse, ymouse;
 static float pdx_drag, pdy_drag;
 static volatile int initedfirst=0;
-static	int *inited;
+static int *inited;
 static int *tileUsage; // array of tile size with usage flag: -1 - not used, 0 - 2d data 1 - points in X-Y, 2 - 1d plots
 static int fireCountMax = 1;
 static int fireCount = 0;
 static volatile bool stop = false;
 static volatile bool paint = false;
 
-void	showMessage(GLfloat, GLfloat, const char*);
+void showMessage(GLfloat, GLfloat, const char*);
 
 static float red(float val, float max)
 {
@@ -218,6 +253,7 @@ struct point
 static point*** charmap;
 }//namespace
 
+#ifndef _NATIVE_WIN32
 #ifdef __MINGW32__
 #define FONT_START binary_font_dat_start
 #define FONT_END binary_font_dat_end
@@ -228,8 +264,13 @@ static point*** charmap;
 
 extern char FONT_START;
 extern char FONT_END;
+#endif
 
-__attribute__((constructor)) void fadey_onload()
+
+#ifndef _NATIVE_WIN32
+__attribute__((constructor))
+#endif
+void fadey_onload()
 {
 	simpledraw_impl::charmap = new simpledraw_impl::point**[256];
 	for(size_t i = 0; i != 256; i++)
@@ -238,7 +279,17 @@ __attribute__((constructor)) void fadey_onload()
   //printf("loading simpledrawlibrary, loading embedded font of size %ld\n",(size_t) (&FONT_END) - (size_t) (&FONT_START));
 
 	std::stringstream ss;
+#ifdef _NATIVE_WIN32
+	HMODULE handle = ::GetModuleHandle(NULL);
+	HRSRC rc = ::FindResource(handle, MAKEINTRESOURCE(IDR_FONT), "TEXT");
+	HGLOBAL rcData = ::LoadResource(handle, rc);
+	size_t size = ::SizeofResource(handle, rc);
+	const char* data = static_cast<const char*>(::LockResource(rcData));
+	ss.write(data, size);
+	std::cout << "resource size is " << size << '\n';
+#else
 	ss.write(&FONT_START, (size_t) (&FONT_END) - (size_t) (&FONT_START));
+#endif
 	char curchar = 0;
 	std::vector<std::vector<simpledraw_impl::point>> curdrawing;
 	int i = 0;
@@ -253,7 +304,7 @@ __attribute__((constructor)) void fadey_onload()
 			if(curchar != 0)
 			{
 				simpledraw_impl::charmap[curchar] = new simpledraw_impl::point*[curdrawing.size() + 1];
-				size_t i(0);
+				size_t i = 0;
 				for(; i != curdrawing.size(); i++)
 				{
 					size_t j(0);
@@ -289,8 +340,8 @@ __attribute__((constructor)) void fadey_onload()
 			i = i == 0  ? 1 : 0;
 		}
 	}
-
-/*
+//#define OLDCODE
+#ifdef OLDCODE
 	for(size_t i = 0; i != 256; i++)
 	{
 		if(simpledraw_impl::charmap[i] == nullptr)
@@ -312,9 +363,15 @@ __attribute__((constructor)) void fadey_onload()
 		}
 		printf("}\n");
 	}
-*/
+#endif
 }
 
+#ifdef _NATIVE_WIN32
+struct autoinit {
+	autoinit(void (*f)()) { f(); }
+};
+static autoinit ai(fadey_onload);
+#endif
 
 namespace simpledraw_impl
 {
@@ -336,8 +393,11 @@ static void _paint_bake()
       return;
      
     int tileId = tile2Bake;
-    pthread_mutex_lock(&simpledraw_impl::data_update_mutex);
-
+#ifdef FADEY_OLDSCHOOL
+	pthread_mutex_lock(&simpledraw_impl::data_update_mutex);
+#else
+	simpledraw_impl::data_update_mutex.lock();
+#endif
     T* DataArr = (T*) DataArrs[tileId]; 
     
     int stride = texSZ[tileId*2];
@@ -378,8 +438,11 @@ static void _paint_bake()
 	  }
 	  texUPD[tileId]=0;
   	paint_pixels::reset();
-  	pthread_mutex_unlock(&simpledraw_impl::data_update_mutex);
-
+#ifdef FADEY_OLDSCHOOL
+	pthread_mutex_unlock(&simpledraw_impl::data_update_mutex);
+#else
+	simpledraw_impl::data_update_mutex.unlock();
+#endif
   	glfwPostEmptyEvent();
   	tile2Bake = -1;
 }
@@ -459,8 +522,12 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
       if(stop) // step
       {
         fireCount = fireCountMax;
-        pthread_cond_broadcast(&interact_cond);
-      }
+#ifdef FADEY_OLDSCHOOL
+		pthread_cond_broadcast(&interact_cond);
+#else
+		interact_cond.notify_all();
+#endif
+	  }
       else
         stop = true;
     }
@@ -469,7 +536,11 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
     if (key == GLFW_KEY_C && action == GLFW_RELEASE)
     {
       stop = false;
-      pthread_cond_broadcast(&interact_cond);
+#ifdef FADEY_OLDSCHOOL
+	  pthread_cond_broadcast(&interact_cond);
+#else
+	  interact_cond.notify_all();
+#endif
     }
 }
 
@@ -668,8 +739,7 @@ bool crossLineWithBB(float* x0, float* y0, float* x1, float* y1, bounds bb)
 		
 }
 
-static void 
-display(GLFWwindow* win)
+static void display(GLFWwindow* win)
 {
   glfwMakeContextCurrent(win);
 	//printf("display %d\n",rand());
@@ -1026,8 +1096,6 @@ static bool idle()
     return refresh;
 }
 
-static pthread_t	GLloop_th_id;
-
 void* GLloop(void*)
 {
 
@@ -1077,10 +1145,14 @@ void* GLloop(void*)
 		}
 	}
 	std::cout << "initialize glfw\n";
-	glfwInit();
+	if (!glfwInit())
+		std::cerr << "glfwInit failed\n";
 	std::cout << "\tdone\n";
 	win = glfwCreateWindow( XSize, YSize, "fadey draw", nullptr, nullptr);
-	std::cout << "creating the window\n";
+	if(win)
+	  std::cout << "created the window OK\n";
+	else
+	  std::cout << "created the window FAILED\n";
 	
 	glfwMakeContextCurrent(win); // what does it mean... no idea. but is wont work wihtout it 
 
@@ -1132,7 +1204,11 @@ void* GLloop(void*)
 		}
 	}
 	//printf("side_max=%d\n",side_max);
+#ifdef FADEY_OLDSCHOOL
 	pthread_mutex_unlock(&close_win_mutex);
+#else
+	close_win_cond.notify_all();
+#endif
 	while(inited[0]==1)
 	{
 		glfwPollEvents();
@@ -1140,18 +1216,18 @@ void* GLloop(void*)
 			glfwWaitEvents();
 		display(win);
 		glfwSwapBuffers(win);
-		#ifdef __WIN32
-		
-		#else
-		#ifdef __MINGW32__
-    Sleep(1);
-    #else
-    usleep(1000);
-    #endif
-    #endif
+#ifdef _WIN32
+	    Sleep(1);
+#else
+		usleep(1000);
+#endif
 	}
 	printf("fadey_draw: quitting... preparing to destroy data\n");
+#ifdef FADEY_OLDSCHOOL
 	pthread_mutex_lock(&data_update_mutex);
+#else
+	data_update_mutex.lock();
+#endif
 	printf("fadey_draw: quitting... destroying window\n");
 	glfwDestroyWindow(win);
 	delete[] texture;
@@ -1167,11 +1243,23 @@ void* GLloop(void*)
 	delete[] DataMaxs;
 	delete[] texturesDataArrs;
 	delete[] close_win;
+#ifdef FADEY_OLDSCHOOL
 	pthread_mutex_unlock(&data_update_mutex);
+#else
+	data_update_mutex.unlock();
+#endif
 	printf("fadey_draw: clean exit\n");
+#ifdef FADEY_OLDSCHOOL
 	pthread_mutex_unlock(&close_win_mutex);
+#else
+	close_win_cond.notify_all();
+#endif
 	stop = false;
+#ifdef FADEY_OLDSCHOOL
 	pthread_cond_broadcast(&interact_cond); // in case somebody is waiting
+#else
+	interact_cond.notify_all();
+#endif
 	return 0;
 }
 
@@ -1290,7 +1378,11 @@ template<typename T>
 void fadey_draw(T* DataArr, int Nx_, int Ny_, int count_)
 {
 	//std::cout << "Nx_=" << *Nx_ptr << ", Ny_=" << *Ny_ptr << " count_=" << *count_ptr << '\n';
+#ifdef FADEY_OLDSCHOOL
 	pthread_mutex_lock(&simpledraw_impl::data_update_mutex);
+#else
+	simpledraw_impl::data_update_mutex.lock();
+#endif
 	if(simpledraw_impl::inited[0]==1)
 	{  
 		int i,j;
@@ -1338,14 +1430,25 @@ void fadey_draw(T* DataArr, int Nx_, int Ny_, int count_)
 		}
 		simpledraw_impl::texUPD[k]=0;
   }
+#ifdef FADEY_OLDSCHOOL
 	pthread_mutex_unlock(&simpledraw_impl::data_update_mutex);
+#else
+	simpledraw_impl::data_update_mutex.unlock();
+#endif
 	glfwPostEmptyEvent();
   
   if(simpledraw_impl::stop)
   {
-    if(simpledraw_impl::fireCount == 0)
-      pthread_cond_wait(&simpledraw_impl::interact_cond, &simpledraw_impl::interact_mutex);
-    else
+	if (simpledraw_impl::fireCount == 0)
+	{
+#ifdef FADEY_OLDSCHOOL
+	  pthread_cond_wait(&simpledraw_impl::interact_cond, &simpledraw_impl::interact_mutex);
+#else
+	  std::unique_lock<std::mutex> ul(simpledraw_impl::interact_mutex);
+	  simpledraw_impl::interact_cond.wait(ul);
+#endif
+	}
+	else
       simpledraw_impl::fireCount--;
   }
 }
@@ -1384,7 +1487,13 @@ void fadey_init(int Nx_, int Ny_, int count_)
 		simpledraw_impl::Nx = Nx_;
 		simpledraw_impl::Ny = Ny_;
 		simpledraw_impl::count = count_;
-		pthread_create(&simpledraw_impl::GLloop_th_id, NULL, &simpledraw_impl::GLloop, NULL);
+#ifdef FADEY_OLDSCHOOL
+		pthread_t GLloop_th_id;
+		pthread_create(&GLloop_th_id, NULL, &simpledraw_impl::GLloop, NULL);
+#else
+		std::thread GLloop_th(simpledraw_impl::GLloop, nullptr);
+		GLloop_th.detach();
+#endif
 		simpledraw_impl::close_win = new int[1];
 		simpledraw_impl::close_win[0] = 0;
 
@@ -1411,11 +1520,15 @@ void fadey_init(int Nx_, int Ny_, int count_)
 			for(int j=0;j<4;j++)
 				simpledraw_impl::plotBounds[i][j]=(j<2)?DBL_MAX:-DBL_MAX;
 		}
-
+#ifdef FADEY_OLDSCHOOL
 		pthread_mutex_init(&simpledraw_impl::close_win_mutex,NULL);
 		pthread_mutex_init(&simpledraw_impl::data_update_mutex,NULL);
 		pthread_mutex_lock(&simpledraw_impl::close_win_mutex);
 		pthread_mutex_lock(&simpledraw_impl::close_win_mutex);
+#else
+		std::unique_lock<std::mutex> ul(simpledraw_impl::close_win_mutex);
+		simpledraw_impl::close_win_cond.wait(ul);
+#endif
 		printf("init: bye\n");
 	}
 }
@@ -1446,9 +1559,14 @@ void fadey_close()
 		simpledraw_impl::close_win[0]=1;
 		simpledraw_impl::inited[0]=0;
 		glfwPostEmptyEvent();
+#ifdef FADEY_OLDSCHOOL
 		pthread_mutex_lock(&simpledraw_impl::close_win_mutex);
 		pthread_mutex_destroy(&simpledraw_impl::close_win_mutex);
 		pthread_mutex_destroy(&simpledraw_impl::data_update_mutex);
+#else
+		std::unique_lock<std::mutex> ul(simpledraw_impl::close_win_mutex);
+		simpledraw_impl::close_win_cond.wait(ul);
+#endif
 		printf("fadey draw: bye!\n");
 	}
 	else
