@@ -1,4 +1,4 @@
-#simple draw 2D
+# simple draw 2D
 
 This library allows you to draw your 2D data as easy as possible. You need one call to create a gra[hical window that need no further maintanance from your side afterwards. Each time you want to plot your 2D data you make one call where you pass the pointer to your data, size of the array along x and y and tile index. You can draw any number of tiles you want. You do not need the track the geomtry of data that you draw, since you always pass dimensions the tile will adapt to new values. While your main code is running you can explore the data: zoom, pan, investigate slices along X and Y.
 
@@ -35,7 +35,7 @@ Do not need Fortran and C? go ahead and disable embedding `libstdc++` into C/C++
 Need static library? Edit `build_lib`.
 
 
-##MSVC Windows build:
+## MSVC Windows build:
 We will do it manually without any CMake or Ninja ...to become ninjas ourselves.
 ### Dependensies
 Get glfw3 and glew binaries or build it from source.
@@ -95,7 +95,8 @@ Also you can build with library built with resources ('a'), in that case you als
 
 **NOTE**: If you fail with resources there will be no text in graphical window.
 
-##Usage of the library
+## Using the library
+### C/C++ Examples
 1. `test0.cpp`/`test.c` creates a bump in 2D array and waits for input.
 2. `test.cpp` creates one bump in first array waits for input and creates second array with two bumps and draws it.
 3. `testcmd.cpp` is a command mode application that alows to add 'bumps' to 2D array by setting 'x y width amplitue' separated by spaces in prompt. So just try .3 .3 .1 1. and see what happens in graphical window.
@@ -113,19 +114,19 @@ The header shows status, which might be `live`/`stop`/`paint`. Then it shows dat
 
 In the main area it shows your 2D arrays.
 
-####Explore your colormaps with mouse:
+#### Explore your colormaps with mouse:
 
 - Hold LMB and drag to pan your colormap.
 - Use wheel to zoom
 - RMB swtiches between `normal view`/`X slice view`/`Y slice view`
 
-####Control the flow with keyboard:
+#### Control the flow with keyboard:
 
 - **S** in normal (`live`) mode switches on `stop` mode, in `stop` mode allows for *n* drawing calls before next stop. Number of steps are set with digit keys, backspace sets *n* back to 1. This number is shown in the header as last entry.
 - **C** switches on `live` mode
 - **D**(*press and hold*) switches on paint mode.
 
-####Paint mode
+#### Paint mode
 
 - LMB draws data
 - RMB picks the value
