@@ -3,7 +3,15 @@
 #define WINDOWS_LEAN_AND_MEAN
 #define NOMINMAX
 #include <windows.h>
+#ifndef HAVE_FONT_DAT
 #include "simpledraw2D_res.h"
+#endif
+#endif
+
+#ifdef HAVE_FONT_DAT
+namespace simpledraw_impl {
+#include "font.inl"
+}
 #endif
 
 #define FADEY_OLDSCHOOL
@@ -279,6 +287,9 @@ void fadey_onload()
   //printf("loading simpledrawlibrary, loading embedded font of size %ld\n",(size_t) (&FONT_END) - (size_t) (&FONT_START));
 
 	std::stringstream ss;
+#ifdef HAVE_FONT_DAT
+	ss.write((const char*) simpledraw_impl::font_dat, simpledraw_impl::font_dat_len);
+#else
 #ifdef _NATIVE_WIN32
 	HMODULE handle = ::GetModuleHandle(NULL);
 	HRSRC rc = ::FindResource(handle, MAKEINTRESOURCE(IDR_FONT), "TEXT");
@@ -289,6 +300,7 @@ void fadey_onload()
 	std::cout << "resource size is " << size << '\n';
 #else
 	ss.write(&FONT_START, (size_t) (&FONT_END) - (size_t) (&FONT_START));
+#endif
 #endif
 	char curchar = 0;
 	std::vector<std::vector<simpledraw_impl::point>> curdrawing;

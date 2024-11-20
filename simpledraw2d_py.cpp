@@ -32,14 +32,15 @@ static PyObject* init(PyObject* self, PyObject** args) {
 
 static PyObject* draw(PyObject* self, PyObject* args, PyObject* kwargs) {
   std::cout << "hi! it is python draw\n" << std::flush;
-  PyObject* pyarr{};
+  PyObject* pyobj{};
   int id;
 	const char* kwlist[] = {"array", "id", NULL};
   const char* argtypes = "|Oi";
 	std::cout << "argtypes=\"" << argtypes << "\"\n";
-	if (!PyArg_ParseTupleAndKeywords(args, kwargs, argtypes, const_cast<char**>(kwlist), &pyarr, &id)) 
+	if (!PyArg_ParseTupleAndKeywords(args, kwargs, argtypes, const_cast<char**>(kwlist), &pyobj, &id)) 
 		std::cout << "parse error\n" << std::flush;
-  std::cout << "---------" << pyarr << '\n' << std::flush;
+  std::cout << "---------" << pyobj << '\n' << std::flush;
+  PyArrayObject* pyarr = reinterpret_cast<PyArrayObject*>(pyobj);
   int dim = PyArray_NDIM(pyarr);
   if(dim!=2)
     return Py_None;
@@ -74,9 +75,9 @@ static PyMethodDef simpledraw2Dmethods[] = {
 
 static PyModuleDef simpledraw2D = {
     PyModuleDef_HEAD_INIT,
-    .m_name = "simpledraw2D",
-    .m_doc = "simple draw library to show 2D arrays with OpenGL",
-    .m_size = -1,
+    "simpledraw2D", //m_name
+    "simple draw library to show 2D arrays with OpenGL", //m_doc
+    -1, //m_size
     simpledraw2Dmethods
 };
 
