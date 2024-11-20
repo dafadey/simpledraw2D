@@ -43,6 +43,7 @@ program hello
           x = real(i) / real(nx)
           y = real(j) / real(ny)
           media(i,j) = .0;
+          darray(i,j) = .0;
           print *, array(i,j)
         end do
         print *
