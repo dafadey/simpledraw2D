@@ -46,7 +46,7 @@ program hello
       allocate(array(nx,ny))
       allocate(darray(nx,ny))
 
-      call fadey_init(nx, ny, 3)
+      call fadey_init_(nx, ny, 3)
       
       arr_ptr => array(1,1)
       darr_ptr => darray(1,1)
@@ -97,8 +97,8 @@ program hello
 
 
 
-      call fadey_draw_real4(arr_ptr, nx, ny, 0)
-      call fadey_draw_real4(media_ptr, nx, ny, 1)
+      call fadey_draw_real4_(arr_ptr, nx, ny, 0)
+      call fadey_draw_real4_(media_ptr, nx, ny, 1)
 
       inch = c_getchar()
       
@@ -116,12 +116,12 @@ program hello
         end do
 
         print *, k
-        call fadey_draw_real4(arr_ptr, nx, ny, 0)
-        call fadey_draw_real4(darr_ptr, nx, ny, 2)
+        call fadey_draw_real4_(arr_ptr, nx, ny, 0)
+        call fadey_draw_real4_(darr_ptr, nx, ny, 2)
         inch = c_getchar()
       end do
 
-      call fadey_draw_real4(arr_ptr, nx, ny, 0)
+      call fadey_draw_real4_(arr_ptr, nx, ny, 0)
       inch = c_getchar()
       
       

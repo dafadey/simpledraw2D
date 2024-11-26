@@ -7,14 +7,16 @@ You can stop your code with the keyboard (key S). Simpledraw draw calls are typi
 Library is distributed as source code. Below are the instructions for build procedures for different OS-es and build tools.
 
 ## Linux Build:
-For Linux there is a build script that creates a distrubution with the following contents:
+For Linux there is a build script that creates a distribution with the following contents:
 
-- `libsimpledraw2D.so` - shared libray for C/C++/Fortran builds
+- `libsimpledraw2D.so` - shared library for C/C++/Fortran builds
 - `simpledraw2D.so` - shared library with Python bindings, just place it nearby your Python script
 
 Prior to build install GLFW3, GLEW (Open GL Wrangler Library) and Python (optionally), those should be in your distro repository. Then go to project root folder and run `./build_lib`
 ### Examples
 Go to `ccpp/fortran` folder and run `./build`, run generated `*.out` binaries. **NOTE**: Build script sets `-Wl,-rpath=../` so you do not have to set `LD_LIBRARY_PATH`.
+
+**NOTE**: Gfortran uses trailing underscores, if you are incompatible with -fno-undescoring please use function names without trailing underscores.
 
 Go to python folder and create symbolic link to python library (or just copy `simpledraw2D.so` to python folder)
 
@@ -45,12 +47,13 @@ and then run
 
 ## MSVC Windows build:
 We will do it manually without any CMake or Ninja ...to become ninjas ourselves.
-### Dependensies
-Get [GLFW](https://www.glfw.org/) and [GLEW](https://glew.sourceforge.net/) binaries or build it from source. Actually you need just one header from glew so you can proceed with glew source package without building it, but glfw3 is strongly needed.
+### Dependencies
+Get [GLFW3](https://www.glfw.org/) and [GLEW](https://glew.sourceforge.net/) binaries or build it from source. Actually you need just one header from GLEW so you can proceed with the GLEW source package without building it, but GLFW3 is strongly needed.
 
 ### Actual Build
-#### C/C++
-1. After you get the sources, create "Empty C++" MSVC solution inside the sources directory (it is quite a convenient placement). Let it be MSVC<VER> in my case it is MSVC2015.
+#### C/C++/Fortran
+We are going to build a static library compatible with C, C++ and Fortran. Clone the sources and let us get to it.
+1. Create "Empty C++" MSVC solution inside the sources directory (it is quite a convenient placement). Let it be MSVC<VER> in my case it is MSVC2015.
 
 2. In your solution create a project libsimpledraw2D.
 **NOTE**: You do both 1 and 2 steps in the New Project creation tab. Just read all fields carefully otherwise you will have to rename your project inside the solution.
@@ -79,7 +82,7 @@ Now your path diverges to 'a' or 'b'. In the case of path 'a' you are building a
     <br><br>In `Solution Explorer->simpledraw2D->Properties->Configuration properties->Build Events->Pre-Build Event`
     set the `Command Line` to `"$(OutDir)xxd.exe $(SolutionDir)..\font.dat > $(SolutionDir)..\font.inl"`
 
-In case of 'b' all the font stuff is embed into `libsimpledraw2D.lib`, so I would advice path 'b' as a best practice for Windows build.
+In case of 'b' all the font stuff is embedded into `libsimpledraw2D.lib`, so I would advise path 'b' as a best practice for Windows build.
 
 ### Python
 Now we are going to add a Python library. It will be pure *simpledraw2D.pyd* that you should place right near your *py* script, i.e. no `__init__.py`, `setup.py`, pip-s, modules, and MSVC Python extensions. You need just libsimpledraw2D.lib and virgin MSVC capable of building C++ projects. To be sure, say you have [Python](https://www.python.org/downloads/) installed in C:\Python311 and you also got ***numpy*** with pip or so. So let's go. Assuming you have your source MSVC2015 project opened do:
@@ -99,6 +102,7 @@ Now we are going to add a Python library. It will be pure *simpledraw2D.pyd* tha
 Build *pysimpledraw2D* project. You should have your *.pyd* file in `MSVC2015/x64/Release`.
 
 ## Examples:
+### C/C++
 As we did before with the library I suggest to create project `MSVC2015` in the `ccpp` folder in the sources directory.
 
 This is not required and not tied with the library folder structure just to keep everything in one place and yet not to pollute the sources (we already did it once with font.inl).
@@ -119,18 +123,25 @@ Also you can build examples by adding `simpledraw2d_glfw3.cpp` as source and als
 
 Also you can build with the library built with resources ('a'), in that case you also have to add resource header and resource script to your project.
 
-**NOTE**: If you fail with resources there will be no text in graphical window.
+**NOTE**: If you fail with resources there will be no text in the graphical window.
+
+### Intel Fortran
+Create the solution `MSVC_ONEAPI` in `fortran` directory with some project name, say `test`. Add existing `hw_live.f90` to `Sources` in the `test` project. Set proper architecture and build type (we use x64, Release all the time in this guide).
+
+Now in `Solution Explorer->test->Properties->Linker->Input->Additional Dependecies` write the following `<full_path>\libsimpledraw2D.lib user32.lib gdi32.lib shell32.lib`. **NOTE** : order may matter. Later you can place libsimpledraw2D.lib nearby your sorces and set path as follows `$(ProjectDir)libsimpledraw2D.lib`. Build and run. Note that you need to distribute `libmmd.dll` and `libifcoremd.dll` alongside your binary.
 
 ## Using the Library
+### Systems witl Lack of OpenGL support
+Currently we have probelms with OpenGL 1.1 systems. Please use [mesa3D Windows built](https://fdossena.com/?p=mesa/index.frag) for those.
 ### C/C++ Examples
 1. `test0.cpp`/`test.c` creates a bump in 2D array and waits for input.
-2. `test.cpp` creates one bump in first array waits for input and creates second array with two bumps and draws it.
-3. `testcmd.cpp` is a command mode application that allows user to add 'bumps' to 2D array by setting *x*, *y*, *width*, *amplitude* separated by spaces in the prompt. So just try `.3 .3 .1 1.` and see what happens in the graphical window.
+2. `test.cpp` creates one bump in the first array, waits for input and creates the second array with two bumps and draws it.
+3. `testcmd.cpp` is a command mode application that allows user to add 'bumps' to 2D array by setting *x*, *y*, *width* and *amplitude* separated by spaces in the prompt. So just try `.3 .3 .1 1.` and see what happens in the graphical window.
 
 ### Fortran Examples
 All three examples solve thermal condutivity problem.
 1. hw0.f90 expects user input to continue and has an intentional bug in solution that can be seen on media boundaries.
-2. hw.f90 also expects user input to continue but whith fixed bug
+2. hw.f90 also expects user input to continue but with fixed bug
 3. hw_live.f90 does not expect any user input but calls `fadey_halt()` before main Cauchy for-loop. To continue press `C` (see [Using graphical window](#using-graphical-window) section)
 
 ### Python Examples
@@ -176,20 +187,20 @@ Navigate to `HKEY_CURRENT_USER > Software > Microsoft > Windows > CurrentVersion
 Set `AAPThreshold` to `0`
 
 ## Vintage Windows Build Systems (yeah! 30+ years of backward compatibility)
-In this section let us try to use Visual Studio 6 ('96) and Microsoft Develeper Studio (Fortran Powerstation 4.0) ('94). First things first, simpledraw2D code cannot be compiled with those and will be nevewer rewritten to support ancient compilers. Instead we are going to use libraries that we built with modern MSVC. There seems to be no chance to use modern lib with anicinet compilers so we are going to use modern dll with import library.
+In this section let us try to use Visual Studio 6 ('96) and Microsoft Develeper Studio (Fortran Powerstation 4.0) ('94). First things first, simpledraw2D code cannot be compiled with those and will be never rewritten to support ancient compilers. Instead we are going to use libraries that we built with modern MSVC. There seems to be no chance to use modern lib with anicinet compilers so we are going to use modern dll with import library.
 ## DLL
-Not necessay but to me it is easier to create new directory in your `simpledraw2D` root, say `MSVC2015x86`. In this directory you create the project simpledraw2D with Properties->Configuration Properties->General->Configuration type=Dynamic library (.dll). Thurther build is the same as one described in previous section for [static library](#actual-build), with just one difference -- you need x86 versions of GLFW3 and GLEW.
+Not necessary but to me it is easier to create a new directory in your `simpledraw2D` root, say `MSVC2015x86`. In this directory you create the project simpledraw2D with Properties->Configuration Properties->General->Configuration type=Dynamic library (.dll). Thurther build is the same as one described in the previous section for [static library](#actual-build), with just one difference -- you need x86 versions of GLFW3 and GLEW.
 ## C/C++
 To build C/C++ examples you use Microsoft Visual Studio 6.0.
-After you got the library in your Release folder there also will be simpledraw2D.lib. This is an import library that (just as a matter of luck) can be used to link C/C++ sources. So for ccpp/vintage/testcmd.c you just add the full path to import library simpledraw2D.lib to Project->Settings->Link and do the build.
+After you get the library in your Release folder there also will be simpledraw2D.lib. This is an import library that (just as a matter of luck) can be used to link C/C++ sources. So for ccpp/vintage/testcmd.c you just add the full path to import library simpledraw2D.lib to Project->Settings->Link and do the build.
 ## Fortran
-Here we are going to do some really nasty things. The problem is that import library generated by MSVC2015 or even import library generated by Microsoft Visual Studio 6.0 is not supported by MS Dev '94 linker. You can use Microsoft Visual Studio 6.0 liker for your fortran project but is requires significant changes in your acient iconic project, so we are going to do something really nasty to override all incompatibilities.
+Here we are going to do some really nasty things. The problem is that the import library generated by MSVC2015 or even the import library generated by Microsoft Visual Studio 6.0 is not supported by MS Dev '94 linker. You can use Microsoft Visual Studio 6.0 liker for your fortran project but it requires significant changes in your ancient iconic project, so we are going to do something really nasty to override all incompatibilities.
 ### Link
-First you need to link your project. To do so you need import library with funtions expected by Fortran Powerstation 4.0 linker. Say in the test source you do:
+First you need to link your project. To do so you need the import library with the functions expected by Fortran Powerstation 4.0 linker. Say in the test source you do:
 
 `call fadey_init_(33,33,3)`
 
-The linker then expects to have library that exports `_FADEY_INIT_@12` function. This is `__std_call` convention, plus upper case, plus leading underscore. That is actually no propblem since you can create  simpldraw2D.def in the MSVC2015x86/Release folder with the following contents:
+The linker then expects to have a library that exports `_FADEY_INIT_@12` function. This is `__std_call` convention, plus upper case, plus leading underscore. That is actually no problem since you can create  simpldraw2D.def in the MSVC2015x86/Release folder with the following contents:
 
 `NAME simpledraw2D.dll`
 <br>`EXPORTS`
@@ -199,17 +210,17 @@ After that you take your cmd wherein you initialize the MS Dev '94 environment w
 
 `lib /def:simpledraw2D.def /out:fsimpledraw2D.def /verbose /machine:ix86`
 
-Now you got import library *fsimpledraw2D.lib* that is compatible with MS Dev '94 linker. You can set full path to that library in Build->Settings->Link (just as it was done for Microsft Visual Studio 6.0). Doing so for all of exported functions from simpledraw2D you will get... NON-WORKING testcmd.exe binary in your MS Dev '94!
+Now you have an import library *fsimpledraw2D.lib* that is compatible with MS Dev '94 linker. You can set the full path to that library in Build->Settings->Link (just as it was done for Microsoft Visual Studio 6.0). Doing so for all of exported functions from simpledraw2D you will get... NON-WORKING testcmd.exe binary in your MS Dev '94!
 ### Link Running Example
-I have no idea why the hell it is not working with straiht DEF fie, but at runtime on some initialization step it says that there is no `FADEY_INIT_@12` symbol found or something. So please note that ***for linking*** it needs `_FADEY_INIT_@12` which you wrote in def ***without*** underscore but got import library ***with*** underscore which is ***required*** to MS Dev linker. Now if you open fsimpledraw2D.lib with somewhat like [HxD](https://mh-nexus.de/en/hxd/), you will see that in the beginning all functions are mentioned ***with leading underscode*** while in the end of that file there is a symbols like FADEY_INIT_@12 i.e. ***wihtout*** underscore. Possibly I am dong something wrong here but the only way I could bring it to work was the following trick:
+I have no idea why the hell it is not working with straight DEF file, but at runtime on some initialization step it says that there is no `FADEY_INIT_@12` symbol found or something. So please note that ***for linking*** it needs `_FADEY_INIT_@12` which you wrote in def ***without*** underscore but got import library ***with*** underscore which is ***required*** to MS Dev linker. Now if you open fsimpledraw2D.lib with somewhat like [HxD](https://mh-nexus.de/en/hxd/), you will see that in the beginning all functions are mentioned ***with leading underscore*** while in the end of that file there is a symbols like `FADEY_INIT_@12` i.e. ***without*** underscore. Possibly I am doing something wrong here but the only way I could bring it to work was the following trick:
 In the def file you do the following change:
 
 `NAME simpledraw2D.dll`
 <br>`EXPORTS`
 <br>`FFADEY_INIT_@12`
 
-**NOTE** preceding F in the function name (say it is for Fortran, huh). In Fortran test source all functions are changed to preceding `F` dupliates, like so:
+**NOTE** preceding F in the function name (say it is for Fortran, huh). In Fortran test source all functions are changed to preceding `F` duplicates, like so:
 
 `call ffadey_init_(33,33,3)`
 
-Linker tries to check if import libray fsimpledraw2D.lib provides `_FFADEY_INIT_@12`, and it does, but at runtime it tries to to search for `FFADEY_INIT_@12` which does not exist, but what exist is `_FADEY_INIT_@12` so in fsimpledraw2D.lib all symbols in the end of the file should be modified by changing F to _. This does the trick! Now at link time first symbols with leading `_F` are used while at runtime the duplicate capitalized function with only leading undescore are successfully retreived from DLL.
+Linker tries to check if import library fsimpledraw2D.lib provides `_FFADEY_INIT_@12`, and it does, but at runtime it tries to to search for `FFADEY_INIT_@12` which does not exist, but what exist is `_FADEY_INIT_@12` so in fsimpledraw2D.lib all symbols in the end of the file should be modified by changing F to _. This does the trick! Now at link time first symbols with leading `_F` are used while at runtime the duplicate capitalized function with only leading underscores are successfully retrieved from DLL.

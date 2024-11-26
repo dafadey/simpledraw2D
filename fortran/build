@@ -1,6 +1,9 @@
 #!/bin/bash
-gfortran -g hw_live.f90 -c
+gfortran -g hw_live.f90 -fno-underscoring -c
 gfortran -g hw_live.o -L../ -lsimpledraw -lGL -lglfw -Wl,-rpath=`pwd`/.. -o f_live.out
 
-gfortran -g hw.f90 -c
+gfortran -g hw.f90 -fno-underscoring -c
 gfortran -g hw.o -L../ -lsimpledraw -lGL -lglfw -Wl,-rpath=`pwd`/.. -o f.out
+
+gfortran -g hw0.f90 -fno-underscoring -c
+gfortran -g hw0.o -L../ -lsimpledraw -lGL -lglfw -Wl,-rpath=`pwd`/.. -o f0.out
