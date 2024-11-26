@@ -53,14 +53,15 @@ Get [GLFW3](https://www.glfw.org/) and [GLEW](https://glew.sourceforge.net/) bin
 ### Actual Build
 #### C/C++/Fortran
 We are going to build a static library compatible with C, C++ and Fortran. Clone the sources and let us get to it.
-1. Create "Empty C++" MSVC solution inside the sources directory (it is quite a convenient placement). Let it be MSVC<VER> in my case it is MSVC2015.
 
-2. In your solution create a project libsimpledraw2D.
-**NOTE**: You do both 1 and 2 steps in the New Project creation tab. Just read all fields carefully otherwise you will have to rename your project inside the solution.
+1. Create `Empty C++` MSVC solution inside the sources directory (it is quite a convenient placement). Let it be `MSVC<VER>` in my case it is `MSVC2015`.
+
+2. In your solution create a project `libsimpledraw2D`.
+**NOTE**: You do both 1 and 2 steps in the New Project creation tab. Just read all the fields carefully otherwise you will have to rename your project inside the solution.
 
 3. Set the architecture. I prefer x64 and Release build type. Actually your arch should match `glfw3` build.
 
-4. Now in the "Solution Explorer" go to `lisimpledraw2D` context menu and choose Properties. Set `Configuration Properties->General->Configuration type = Static library(.lib)`
+4. Now in the `Solution Explorer` go to `lisimpledraw2D` context menu and choose `Properties`. Set `Configuration Properties->General->Configuration type = Static library(.lib)`
 
 5. In the same window, set `Configuration Properties->C/C++->General->Additional Include Directories` to `<yourpath>\glfw3\include` and `<yourpath>\glew\include`.
 
@@ -69,22 +70,22 @@ We are going to build a static library compatible with C, C++ and Fortran. Clone
 7. In the same window, set `Configuration properties->Librarian->Additional Dependencies` add `opengl32.lib` and `glfw3.lib`
 
 8. In `Solution Explorer->simpledraw2D->Sources` do `Add->Existing Item` and choose `simpledraw2d_glfw3.cpp`
-<br>... we are almost done (no!)
+<br>... we are almost done (NO!)
 
-Now your path diverges to 'a' or 'b'. In the case of path 'a' you are building a library with resources but to use it you have to add resources to all your projects every time. It is not very convenient so you can use path 'b'. In which you set `xxd` project to be built before simpledraw2D and before building the latter you set *pre-build* step which uses `xxd.exe` to generate include file `font.inl` which contains font data in a form of simple C character array.
+Now your path diverges to 'a' or 'b'. In the case of path 'a' you are building a library with resources but to use it you have to add resources to all your projects every time. It is not very convenient so you can use path 'b'. In which you set `xxd` project to be built before simpledraw2D and before building the latter you set `Pre-Build` step which uses `xxd.exe` to generate include file `font.inl` which contains font data in a form of simple C character array.
 
 - **a**<br> In `Solution Explorer->libsimpledraw2D->Header Files` do `Add->Existing Item` and choose `simpledraw2D_res.h`
     <br><br>In `Solution Explorer->libsimpledraw2D->Resource Files` do `Add->Existing Item` and choose `simpledraw2D.rc`
 
 - **b**<br> Add `HAVE_FONT_DAT` to `Solution Explorer->libsimpledraw2D->Properties->Configuration properties->C/C++->Preprocessor->Preprocessor Definitions`
     <br><br>Add new project to your solution, name it `xxd`
-    <br><br>Navigate to `Solution Explorer->libsimpledraw2D->Properties->Configuration properties->Build Dependencies->Project Dependencies`, where add `xxd` dependency for `libsimpledraw2D`
+    <br><br>Navigate to `Solution Explorer->libsimpledraw2D->Properties->Configuration properties->Build Dependencies->Project Dependencies`, and add `xxd` dependency for `libsimpledraw2D`
     <br><br>In `Solution Explorer->simpledraw2D->Properties->Configuration properties->Build Events->Pre-Build Event`
     set the `Command Line` to `"$(OutDir)xxd.exe $(SolutionDir)..\font.dat > $(SolutionDir)..\font.inl"`
 
-In case of 'b' all the font stuff is embedded into `libsimpledraw2D.lib`, so I would advise path 'b' as a best practice for Windows build.
+In case of 'b' all the font stuff is embedded into `libsimpledraw2D.lib`, so I would advise path 'b' over 'a' as a best practice for Windows build.
 
-### Python
+### Python (optional)
 Now we are going to add a Python library. It will be pure *simpledraw2D.pyd* that you should place right near your *py* script, i.e. no `__init__.py`, `setup.py`, pip-s, modules, and MSVC Python extensions. You need just libsimpledraw2D.lib and virgin MSVC capable of building C++ projects. To be sure, say you have [Python](https://www.python.org/downloads/) installed in C:\Python311 and you also got ***numpy*** with pip or so. So let's go. Assuming you have your source MSVC2015 project opened do:
 
 - Add a new *Empty C++* project to the solution with the name ***pysimpledraw2D***. Set `Configuration Properties->General->Configuration type = Dynamic library(.dll)`.
@@ -126,13 +127,17 @@ Also you can build with the library built with resources ('a'), in that case you
 **NOTE**: If you fail with resources there will be no text in the graphical window.
 
 ### Intel Fortran
-Create the solution `MSVC_ONEAPI` in `fortran` directory with some project name, say `test`. Add existing `hw_live.f90` to `Sources` in the `test` project. Set proper architecture and build type (we use x64, Release all the time in this guide).
+Create the solution `MSVC_ONEAPI` in `fortran` directory with some project, named say `test`. Add existing `hw_live.f90` to `Sources` in the `test` project. Set proper architecture and build type (we use x64, Release all the time in this guide).
 
-Now in `Solution Explorer->test->Properties->Linker->Input->Additional Dependecies` write the following `<full_path>\libsimpledraw2D.lib user32.lib gdi32.lib shell32.lib`. **NOTE** : order may matter. Later you can place libsimpledraw2D.lib nearby your sorces and set path as follows `$(ProjectDir)libsimpledraw2D.lib`. Build and run. Note that you need to distribute `libmmd.dll` and `libifcoremd.dll` alongside your binary.
+Now in `Solution Explorer->test->Properties->Linker->Input->Additional Dependecies` write the following `<full_path>\libsimpledraw2D.lib user32.lib gdi32.lib shell32.lib`.
+
+**NOTE** : Order may matter. Later you can place `libsimpledraw2D.lib` nearby your sorces and set path as follows `$(ProjectDir)libsimpledraw2D.lib`.
+
+Build and run. Note that you need to distribute `libmmd.dll` and `libifcoremd.dll` alongside your binary.
 
 ## Using the Library
 ### Systems witl Lack of OpenGL support
-Currently we have probelms with OpenGL 1.1 systems. Please use [mesa3D Windows built](https://fdossena.com/?p=mesa/index.frag) for those.
+Currently we have probelms with OpenGL 1.1 systems (e.g. [Oracle Virtual Box](https://www.virtualbox.org/)). Please use [mesa3D Windows built](https://fdossena.com/?p=mesa/index.frag) for those.
 ### C/C++ Examples
 1. `test0.cpp`/`test.c` creates a bump in 2D array and waits for input.
 2. `test.cpp` creates one bump in the first array, waits for input and creates the second array with two bumps and draws it.
@@ -153,12 +158,12 @@ In CMD go to python folder in simpledraw2D project, set `PATH` to `C:\Python311;
 - `fadey_close()` closes the graphical window
 - `fadey_halt()` switches on *stop* mode
 
-Look at trivial test sources to learn more about API.
+Checkout trivial test sources to learn more about API, anything starting with fadey_ is a simpledraw2D API. Unfortunatelly it differs for each build system (e.g. Fortran and C uses underscored versions of API)
 
 ### Using Graphical Window
-The header shows status, which might be `live`/`stop`/`paint`. Then it shows data under the cursor in the form of `f[tileId](x,y)=value`. Then it shows the number of draw commands it does without stopping, which shows up only in *stop* mode.
+The header shows status, which might be `live`/`stop`/`paint`. Then it shows data under the cursor in the form of `f[tileId](x,y)=value`. Then it shows the number of draw commands it does without stopping, which shows up only in `stop` mode.
 
-In the main area it shows your 2D arrays.
+In the main area it shows your 2D arrays in tiles.
 
 #### Explore your Colormaps with Mouse:
 
@@ -168,9 +173,9 @@ In the main area it shows your 2D arrays.
 
 #### Control the Flow with Keyboard:
 
-- **S** in normal (`live`) mode switches on `stop` mode, in `stop` mode allows for *n* drawing calls before next stop. Number of steps are set with digit keys, backspace sets *n* back to 1. This number is shown in the header as last entry.
-- **C** switches on `live` mode
-- **D**(*press and hold*) switches on paint mode.
+- **S** in normal (`live`) mode switches on the `stop` mode, in `stop` mode it allows for *n* drawing calls before next stop. Number of steps are set with digit keys, backspace sets *n* back to 1. This number is shown in the header as the last entry.
+- **C** switches on the `live`(a.k.a. normal) mode
+- **D**(*press and hold*) switches on the paint mode.
 
 #### Paint Mode
 
