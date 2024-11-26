@@ -136,7 +136,7 @@ Now in `Solution Explorer->test->Properties->Linker->Input->Additional Dependeci
 Build and run. Note that you need to distribute `libmmd.dll` and `libifcoremd.dll` alongside your binary.
 
 ## Using the Library
-### Systems witl Lack of OpenGL support
+### Systems with Lack of OpenGL support
 Currently we have probelms with OpenGL 1.1 systems (e.g. [Oracle Virtual Box](https://www.virtualbox.org/)). Please use [mesa3D Windows built](https://fdossena.com/?p=mesa/index.frag) for those.
 ### C/C++ Examples
 1. `test0.cpp`/`test.c` creates a bump in 2D array and waits for input.
