@@ -1,8 +1,32 @@
 #!/bin/bash
 rm -f *.so
+
+#set your pathes here
+#NOTE: it is better to have static glfw3 otherwise you have to add this dep to your other ptojects
+glfw_path=/home/dan/Downloads/glfw-3.4/install
+glew_path=/usr/lib/x86_64-linux-gnu/
+
 objcopy -I binary -O elf64-x86-64 --binary-architecture i386 font.dat font.o
-g++ -g -fPIC -O3 -I/home/dan/Downloads/glfw-3.4/install/include -c simpledraw2d_glfw3.cpp
-g++ -O3 -g -fPIC -I/usr/include/python3.12 -I/usr/lib/python3/dist-packages/numpy/core/include -c simpledraw2d_py.cpp
-g++ *.o /home/dan/Downloads/glfw-3.4/install/lib/libglfw3.a /usr/lib/x86_64-linux-gnu/libGLEW.a -shared -o simpledraw2D.so
+g++ -g -fPIC -O3 -I${glfw_path}/include -c simpledraw2d_glfw3.cpp
+
+#so
 g++ -g -shared -Wl,-soname,libsimpledraw.so -o libsimpledraw.so simpledraw2d_glfw3.o font.o -static-libstdc++
+
+#rm -f *.o; exit 0
+#static
+rm -rf tmp_deps_objs
+mkdir tmp_deps_objs
+cp ${glfw_path}/lib/libglfw3.a tmp_deps_objs/
+cp ${glew_path}/libGLEW.a tmp_deps_objs/
+cd tmp_deps_objs
+ar -x libglfw3.a
+ar -x libGLEW.a
+cd ../
+ar -r libsimpledraw2D.a tmp_deps_objs/*.o simpledraw2d_glfw3.o font.o
+
+#rm -f *.o; exit 0
+#python
+g++ -O3 -g -fPIC -I/usr/include/python3.12 -I/usr/lib/python3/dist-packages/numpy/core/include -c simpledraw2d_py.cpp
+g++ *.o ${glfw_path}/lib/libglfw3.a ${glew_path}/libGLEW.a -shared -o simpledraw2D.so
+
 rm -f *.o

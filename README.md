@@ -11,8 +11,9 @@ For Linux there is a build script that creates a distribution with the following
 
 - `libsimpledraw2D.so` - shared library for C/C++/Fortran builds
 - `simpledraw2D.so` - shared library with Python bindings, just place it nearby your Python script
+- `libsimpledraw2D.a` - static library containing GLFW and GLEW embedded, so only -lGL will be needed further
 
-Prior to build install GLFW3, GLEW (Open GL Wrangler Library) and Python (optionally), those should be in your distro repository. Then go to project root folder and run `./build_lib`
+Prior to build install GLFW3, GLEW (Open GL Wrangler Library) and Python (optionally), those should be in your distro repository. Then go to project root folder change pathes in `build_lib` and run it.
 ### Examples
 Go to `ccpp/fortran` folder and run `./build`, run generated `*.out` binaries. **NOTE**: Build script sets `-Wl,-rpath=../` so you do not have to set `LD_LIBRARY_PATH`.
 
@@ -38,12 +39,7 @@ and then run
 **checkout the difference** in speed and also take a look at the code in `fdtd_plasma.py` *vs* `fdtd_plasma_CPython.py + fdtd_plasma.cpp`.
 
 ### DYI Final Notes
-- Do not need Python? Edit `build_lib` to disable python library `simpledraw2D.so`. Python dependency will disappear.
-
-- Do not need Fortran and C? go ahead and disable embedding `libstdc++` into C/C++/Fortran library `libsimpledraw2D.so`
-
-- Need a static library? Again, do not hesitate to edit `build_lib` script.
-
+Edit `build_lib` script to tune your build
 
 ## MSVC Windows build:
 We will do it manually without any CMake or Ninja ...to become ninjas ourselves.
