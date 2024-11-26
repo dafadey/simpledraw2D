@@ -48,12 +48,12 @@ program hello
 
       call fadey_init(nx, ny, 3)
       
-      arr_ptr => array(0,0)
-      darr_ptr => darray(0,0)
-      media_ptr => media(0,0)
+      arr_ptr => array(1,1)
+      darr_ptr => darray(1,1)
+      media_ptr => media(1,1)
 
-      do j = 0, ny-1, 1
-        do i = 0, nx-1, 1
+      do j = 1, ny, 1
+        do i = 1, nx, 1
           x = real(i) / real(nx)
           y = real(j) / real(ny)
           !array(i,j) = 1. / (.3+((x-.5)*7.)**2+((y-.5)*13.)**2) + 1. / (.3+((x-.73)*33.)**2+((y-.8)*33.)**2) 
@@ -69,8 +69,8 @@ program hello
         end do
       end do
 
-      do j = 0, ny-1, 1
-        do i = 0, nx-1, 1
+      do j = 1, ny, 1
+        do i = 1, nx, 1
           x = real(i) / real(nx)
           y = real(j) / real(ny)
           if (media(i,j) > 1) then
@@ -103,14 +103,14 @@ program hello
       inch = c_getchar()
       
       do k = 1, 3333, 1
-        do j = 1, ny-2, 1
-          do i = 1, nx-2, 1
+        do j = 2, ny-1, 1
+          do i = 2, nx-1, 1
            darray(i,j) = - 4. * array(i,j) + array(i-1,j) + array(i+1,j) + array(i,j-1) + array(i,j+1)
           end do
         end do
 
-        do j = 1, ny-2, 1
-          do i = 1, nx-2, 1
+        do j = 2, ny-1, 1
+          do i = 2, nx-1, 1
             array(i,j) = array(i,j) + media(i,j) * darray(i,j) * 0.01
           end do
         end do

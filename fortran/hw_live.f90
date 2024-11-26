@@ -34,19 +34,19 @@ program hello
 
       call fadey_init(nx, ny, 3)
       
-      arr_ptr => array(0,0)
-      darr_ptr => darray(0,0)
-      media_ptr => media(0,0)
+      arr_ptr => array(1,1)
+      darr_ptr => darray(1,1)
+      media_ptr => media(1,1)
 
-      do j = 0, ny-1, 1
-        do i = 0, nx-1, 1
+      do j = 1, ny, 1
+        do i = 1, nx, 1
           x = real(i) / real(nx)
           y = real(j) / real(ny)
           media(i,j) = .0;
           darray(i,j) = .0;
-          print *, array(i,j)
+          !print *, array(i,j)
         end do
-        print *
+        !print *
       end do
  
       do j=ny/2+ny/33, ny/2+ny/7, 1
@@ -62,9 +62,9 @@ program hello
           if (media(i,j) > 1) then
             array(i,j) = 1. / (.3+((x-.7)*33.)**2+((y-.67)*33.)**2) 
           end if
-          print *, array(i,j)
+          !print *, array(i,j)
         end do
-        print *
+        !print *
       end do
 
       do j=ny/2-ny/7, ny/2-ny/33, 1
@@ -85,8 +85,8 @@ program hello
       call fadey_halt()
 
       do k = 1, 3333, 1
-        do j = 1, ny-2, 1
-          do i = 1, nx-2, 1
+        do j = 2, ny-1, 1
+          do i = 2, nx-1, 1
            qxp = array(i+1,j) - array(i,j)
            qxn = array(i-1,j) - array(i,j)
            qyp = array(i,j+1) - array(i,j)
@@ -96,8 +96,8 @@ program hello
           end do
         end do
 
-        do j = 1, ny-2, 1
-          do i = 1, nx-2, 1
+        do j = 2, ny-1, 1
+          do i = 2, nx-1, 1
             array(i,j) = array(i,j) + darray(i,j) * 0.01
           end do
         end do
