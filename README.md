@@ -189,7 +189,7 @@ First you need to link your project. To do so you need import library with funti
 
 `call fadey_init_(33,33,3)`
 
-The linker then expects to have library that exports _FADEY_INIT_@12 function. This is __std_call convention, plus upper case, plus leading underscore. That is actually no propblem since you can create  simpldraw2D.def in the MSVC2015x86/Release folder with the following contents:
+The linker then expects to have library that exports `_FADEY_INIT_@12` function. This is `__std_call` convention, plus upper case, plus leading underscore. That is actually no propblem since you can create  simpldraw2D.def in the MSVC2015x86/Release folder with the following contents:
 
 `NAME simpledraw2D.dll`
 <br>`EXPORTS`
@@ -201,15 +201,15 @@ After that you take your cmd wherein you initialize the MS Dev '94 environment w
 
 Now you got import library *fsimpledraw2D.lib* that is compatible with MS Dev '94 linker. You can set full path to that library in Build->Settings->Link (just as it was done for Microsft Visual Studio 6.0). Doing so for all of exported functions from simpledraw2D you will get... NON-WORKING testcmd.exe binary in your MS Dev '94!
 ### Link Running Example
-I have no idea why the hell it is not working with straiht DEF fie, but at runtime on some initialization step it says that there is no FADEY_INIT_@12 symbol found or something. So please note that ***for linking*** it needs _FADEY_INIT_@12 which you wrote in def ***without*** underscore but got import library ***with*** underscore which is ***required*** to MS Dev linker. Now if you open fsimpledraw2D.lib with somewhat like [HxD](https://mh-nexus.de/en/hxd/), you will see that in the beginning all functions are mentioned ***with leading underscode*** while in the end of that file there is a symbols like FADEY_INIT_@12 i.e. ***wihtout*** underscore. Possibly I am dong something wrong here but the only way I could bring it to work was the following trick:
+I have no idea why the hell it is not working with straiht DEF fie, but at runtime on some initialization step it says that there is no `FADEY_INIT_@12` symbol found or something. So please note that ***for linking*** it needs `_FADEY_INIT_@12` which you wrote in def ***without*** underscore but got import library ***with*** underscore which is ***required*** to MS Dev linker. Now if you open fsimpledraw2D.lib with somewhat like [HxD](https://mh-nexus.de/en/hxd/), you will see that in the beginning all functions are mentioned ***with leading underscode*** while in the end of that file there is a symbols like FADEY_INIT_@12 i.e. ***wihtout*** underscore. Possibly I am dong something wrong here but the only way I could bring it to work was the following trick:
 In the def file you do the following change:
 
 `NAME simpledraw2D.dll`
 <br>`EXPORTS`
 <br>`FFADEY_INIT_@12`
 
-**NOTE** preceding F in the function name (say it is for Fortran, huh). In Fortran test source all functions are changed to preceding *f* dupliates, like so:
+**NOTE** preceding F in the function name (say it is for Fortran, huh). In Fortran test source all functions are changed to preceding `F` dupliates, like so:
 
 `call ffadey_init_(33,33,3)`
 
-Linker tries to check if import libray fsimpledraw2D.lib provides _FFADEY_INIT_@12, and it does, but at runtime it tries to to search for FFADEY_INIT_@12 which does not exist, but what exist is _FADEY_INIT_@12 so in fsimpledraw2D.lib all symbols in the end of the file should be modified by changing F to _. This does the trick! Now at link time first symbols with leading **_F** are used while at runtime the duplicate capitalized function with only undescore are successfully retreived from DLL.
+Linker tries to check if import libray fsimpledraw2D.lib provides `_FFADEY_INIT_@12`, and it does, but at runtime it tries to to search for `FFADEY_INIT_@12` which does not exist, but what exist is `_FADEY_INIT_@12` so in fsimpledraw2D.lib all symbols in the end of the file should be modified by changing F to _. This does the trick! Now at link time first symbols with leading `_F` are used while at runtime the duplicate capitalized function with only leading undescore are successfully retreived from DLL.
