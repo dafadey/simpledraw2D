@@ -1,4 +1,5 @@
 # simple draw 2D
+Instead of funky pictures checkout my [crapy tutorial video](https://youtu.be/x3lZCHgtlEs). This library shows it self as interactive tool on the first place so there will be no ugly pictures here.
 
 This library allows you to draw your 2D data as easy as possible. You need one call to create a graphical window that needs no further maintenance from your side afterwards. Each time you want to plot your 2D data you make one call where you pass the pointer to your data, size of the array along x and y and tile index. You can draw any number of tiles you want. You do not need to track the geometry of data that you draw, since you always pass dimensions the tile will adapt to new values. While your main code is running you can explore the data: zoom, pan, investigate slices along X and Y.
 
