@@ -55,8 +55,8 @@ program hello
         end do
       end do
 
-      do j = 0, ny-1, 1
-        do i = 0, nx-1, 1
+      do j = 1, ny, 1
+        do i = 1, nx, 1
           x = real(i) / real(nx)
           y = real(j) / real(ny)
           if (media(i,j) > 1) then
@@ -109,7 +109,7 @@ program hello
 
       call fadey_draw_real4_(arr_ptr, nx, ny, 0)
       
-      
+     
       print *, 'bye'
       deallocate(array)
 end program hello

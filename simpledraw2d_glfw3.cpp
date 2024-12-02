@@ -1207,9 +1207,9 @@ void* GLloop(void*)
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 #ifdef GL_VERSION_1_1
-				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F_ARB, texSZ[number*2], texSZ[number*2+1], 0, GL_RGBA, GL_FLOAT, texturesDataArrs[number]);
-#else
 				glTexImage2D(GL_TEXTURE_2D, 0, 4, texSZ[number*2], texSZ[number*2+1], 0, GL_RGBA, GL_FLOAT, texturesDataArrs[number]);
+#else
+				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F_ARB, texSZ[number*2], texSZ[number*2+1], 0, GL_RGBA, GL_FLOAT, texturesDataArrs[number]);
 #endif
 				texUPD[number]=1;				
 			}

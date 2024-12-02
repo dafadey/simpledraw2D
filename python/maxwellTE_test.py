@@ -1,12 +1,9 @@
 #!/usr/bin/python3.10
-
-import matplotlib
-import matplotlib.pyplot as plt
 from fdtd_plasma import *
 
-from OpenGL.GL import *
-import simpledraw2D as sd2D
-sd2D.init(13,13,1)
+from OpenGL.GL import * #simpledraw2D
+import simpledraw2D as sd2D #simpledraw2D
+sd2D.init(13,13,1) #simpledraw2D
 
 fdtd = fdtdTE_plasma(nz=512, nx=512, dz=.001, dx=.001, nplasma=3000., V=math.sqrt(0.0), nu=0.0)
 
@@ -32,9 +29,12 @@ for i in range(0,ns):
     for zi in range(0,fdtd.nz) :
       sig2[zi] = (fdtd.ey[zi,source_xi] - fdtd.ey[zi,source_xi-1]) / fdtd.dx
 
-  sd2D.draw(fdtd.ey, 0);
+  sd2D.draw(fdtd.ey, 0); #simpledraw2D
+  
+  if i==0 :
+	  sd2D.halt() #simpledraw2D
   
   print(str(i)+"/"+str(ns))
 
-sd2D.finish()
+sd2D.finish() #simpledraw2D
 print("all done")

@@ -20,6 +20,8 @@ extern "C"
 void fadey_draw_real8_(double* DataArr, int* Nx_ptr, int* Ny_ptr, int* count_ptr);
 extern "C"
 void fadey_close_();
+extern "C"
+void fadey_halt_();
 
 static PyObject* init(PyObject* self, PyObject** args) {
   int nx=PyLong_AsLong(args[0]);
@@ -66,10 +68,16 @@ static PyObject* finish(PyObject* self) {
 	return Py_None;
 }
 
+static PyObject* halt(PyObject* self) {
+	fadey_halt_();
+	return Py_None;
+}
+
 static PyMethodDef simpledraw2Dmethods[] = {
-	{"init", (PyCFunction) init, METH_FASTCALL, "provides number of available GPUs"},
-	{"draw", (PyCFunction) draw, METH_VARARGS | METH_KEYWORDS, "provides given GPU temperature"},
-	{"finish", (PyCFunction) finish, METH_NOARGS, "provides number of available GPUs"},
+	{"init", (PyCFunction) init, METH_FASTCALL, "initializes graphical window with given number of tiles"},
+	{"draw", (PyCFunction) draw, METH_VARARGS | METH_KEYWORDS, "draws data into specified tiles"},
+	{"finish", (PyCFunction) finish, METH_NOARGS, "closes graphical window"},
+	{"halt", (PyCFunction) halt, METH_NOARGS, "sets stop flag for drawing commands" },
 	{NULL, NULL, 0, NULL}
 };
 
